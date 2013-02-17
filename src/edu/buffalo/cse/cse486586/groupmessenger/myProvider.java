@@ -40,7 +40,7 @@ public class myProvider extends ContentProvider {
 		if (rowId > 0) {
 			Uri newUri = ContentUris.withAppendedId(CONTENT_URI, rowId);
 			getContext().getContentResolver().notifyChange(newUri, null);
-			Log.e(TAG, "Insertion success!!");
+			Log.i(TAG, "Insertion success # " + Long.toString(rowId));
 			return newUri;
 		}
 		else {
@@ -59,14 +59,21 @@ public class myProvider extends ContentProvider {
 
 	@Override
 	public Cursor query(Uri arg0, String[] arg1, String arg2, String[] arg3,String arg4) {
-		db= myDb.getWritableDatabase();
-		SQLiteQueryBuilder qb= new SQLiteQueryBuilder();
+		db= myDb.getReadableDatabase();
+		/*SQLiteQueryBuilder qb= new SQLiteQueryBuilder();
 		qb.setTables(myHelper.TABLE_NAME);
 		
-		qb.appendWhereEscapeString(myHelper.KEY_FIELD + " = " + arg2);
-		Cursor c= qb.query(db, null, null, null, null, null, null);
-		//Cursor c= db.query(myHelper.TABLE_NAME, null, arg2, null, null, null, null);
-		c.setNotificationUri(getContext().getContentResolver(), arg0);
+		//qb.appendWhere(myHelper.KEY_FIELD + " = " + "'"+arg2+"'");
+		
+		//Cursor c= qb.query(db, null, myHelper.KEY_FIELD + " = ?", new String[] {arg2}, null, null, null);
+       //Cursor c= this.db.query(myHelper.TABLE_NAME, null, "key = ? ", new String[] {"'"+arg2+"'"}, null, null, null);*/
+        Cursor c= db.rawQuery("select * from Store where key like '"+arg2+"'", null);
+		/*String str[] = new String[2];
+		str[0]= c.getString(c.getColumnIndex(myHelper.KEY_FIELD));
+		str[1]= c.getString(c.getColumnIndex(myHelper.VALUE_FIELD));
+		for(String s : str) 
+			Log.d(TAG, s);*/
+		
 		return c;
 	}
 

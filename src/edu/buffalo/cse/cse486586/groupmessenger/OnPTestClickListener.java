@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 public class OnPTestClickListener implements OnClickListener {
 
-    private static final String TAG = "adil";//OnPTestClickListener.class.getName();
+    private static final String TAG = OnPTestClickListener.class.getName();
     private static final int TEST_CNT = 50;
     private static final String KEY_FIELD = "key";
     private static final String VALUE_FIELD = "value";
@@ -88,17 +88,12 @@ public class OnPTestClickListener implements OnClickListener {
 
                 int keyIndex = resultCursor.getColumnIndex(KEY_FIELD);
                 int valueIndex = resultCursor.getColumnIndex(VALUE_FIELD);
-                
-                
                 if (keyIndex == -1 || valueIndex == -1) {
                     Log.e(TAG, "Wrong columns");
                     resultCursor.close();
                     throw new Exception();
                 }
 
-                Log.d(TAG, Integer.toString(keyIndex) + " :: " + Integer.toString(valueIndex)); //myline
-                
-                
                 resultCursor.moveToFirst();
 
                 if (!(resultCursor.isFirst() && resultCursor.isLast())) {
@@ -106,13 +101,11 @@ public class OnPTestClickListener implements OnClickListener {
                     resultCursor.close();
                     throw new Exception();
                 }
-                Log.d(TAG, resultCursor.getString(keyIndex) + " ## " + resultCursor.getString(valueIndex)); //myLine
 
                 String returnKey = resultCursor.getString(keyIndex);
                 String returnValue = resultCursor.getString(valueIndex);
                 if (!(returnKey.equals(key) && returnValue.equals(val))) {
                     Log.e(TAG, "(key, value) pairs don't match\n");
-                    Log.e(TAG, returnKey + returnValue); //my line
                     resultCursor.close();
                     throw new Exception();
                 }
@@ -120,7 +113,6 @@ public class OnPTestClickListener implements OnClickListener {
                 resultCursor.close();
             }
         } catch (Exception e) {
-        	Log.d(TAG, e.getMessage()); //my line
             return false;
         }
 

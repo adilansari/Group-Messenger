@@ -20,7 +20,7 @@ public class myHelper extends SQLiteOpenHelper {
 	
 	public myHelper(Context context) {
 		super(context, DB_NAME, null, DB_VERSION);
-		context.deleteDatabase(DB_NAME);
+		//context.deleteDatabase(DB_NAME);
 	}
 
 	@Override

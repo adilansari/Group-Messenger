@@ -1,6 +1,7 @@
 package edu.buffalo.cse.cse486586.groupmessenger;
 
 import java.net.*;
+import java.util.ArrayList;
 import java.io.*;
 import android.os.Bundle;
 import android.app.Activity;
@@ -15,10 +16,13 @@ public class GroupMessengerActivity extends Activity {
 
 	public static String avd_name;
 	public static int avd_number;
+	public static boolean isSequencer=false;
 	public static Socket socket[];
 	public static int recvPort = 10000;
 	public static String ipAddr = "10.0.2.2";
 	public static final String TAG="adil activity";
+	public static int[] vector= new int[3];
+	public static ArrayList<Message> holdBack = new ArrayList<Message>();
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +47,7 @@ public class GroupMessengerActivity extends Activity {
 				else if(portStr.equals("5556")) {
 					avd_name= "avd1";
 					avd_number=1;
+					isSequencer=true;
 				}
 				else if(portStr.equals("5558")) {
 					avd_name= "avd2";
@@ -72,6 +77,7 @@ public class GroupMessengerActivity extends Activity {
         				sock1= servSocket.accept();
         				BufferedReader br= new BufferedReader(new InputStreamReader(sock1.getInputStream()));
         				String str= br.readLine();
+        				//check for msg type msg,syn,test
         				Log.i(TAG, "recvd msg: "+str);
         				} 
         			
@@ -119,6 +125,11 @@ public class GroupMessengerActivity extends Activity {
         }).start();
     }
 
+    public void multicast(Object o) {
+    //write down your multiocast function here	
+    	//this method shall receive object as parameters not a String
+    }
+    
     
     public String get_portStr() {
     	TelephonyManager tel = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
@@ -134,4 +145,24 @@ public class GroupMessengerActivity extends Activity {
         return true;
     }
     
+}
+
+
+class Message implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	String msg_id;
+	String msg;
+	int avd_number;
+	int vector[];
+	
+	Message(String msg_id, String msg, int avd_number, int[] v) {
+		this.msg_id= msg_id;
+		this.msg= msg;
+		this.avd_number= avd_number;
+		this.vector= v;
+	}
 }

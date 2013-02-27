@@ -35,8 +35,8 @@ public class myProvider extends ContentProvider {
 	public Uri insert(Uri arg0, ContentValues arg1) {
 		db = myDb.getWritableDatabase();
 		ContentValues values= new ContentValues(arg1);
-		long rowId= db.insert(myHelper.TABLE_NAME, myHelper.VALUE_FIELD, values);
-		
+		//long rowId= db.insert(myHelper.TABLE_NAME, myHelper.VALUE_FIELD, values);
+		long rowId= db.replace(myHelper.TABLE_NAME, myHelper.VALUE_FIELD, values);
 		if (rowId > 0) {
 			Uri newUri = ContentUris.withAppendedId(CONTENT_URI, rowId);
 			getContext().getContentResolver().notifyChange(newUri, null);
@@ -66,13 +66,8 @@ public class myProvider extends ContentProvider {
 		//qb.appendWhere(myHelper.KEY_FIELD + " = " + "'"+arg2+"'");
 		
 		//Cursor c= qb.query(db, null, myHelper.KEY_FIELD + " = ?", new String[] {arg2}, null, null, null);
-       //Cursor c= this.db.query(myHelper.TABLE_NAME, null, "key = ? ", new String[] {"'"+arg2+"'"}, null, null, null);*/
-        Cursor c= db.rawQuery("select * from Store where key like '"+arg2+"'", null);
-		/*String str[] = new String[2];
-		str[0]= c.getString(c.getColumnIndex(myHelper.KEY_FIELD));
-		str[1]= c.getString(c.getColumnIndex(myHelper.VALUE_FIELD));
-		for(String s : str) 
-			Log.d(TAG, s);*/
+      	//Cursor c= this.db.query(myHelper.TABLE_NAME, null, "key = ? ", new String[] {"'"+arg2+"'"}, null, null, null);*/
+        Cursor c= db.rawQuery("select * from "+myHelper.TABLE_NAME+" where key like '"+arg2+"'", null);
 		
 		return c;
 	}

@@ -37,7 +37,7 @@ public class myHelper extends SQLiteOpenHelper {
 		 onCreate(arg0);
 	}
 
-	public void insertPair(String key, String value) {
+	public static void insertPair(String key, String value) {
 		ContentValues keyValuesToInsert= new ContentValues();
 		keyValuesToInsert.put(myHelper.KEY_FIELD, key);
 		keyValuesToInsert.put(myHelper.VALUE_FIELD, value);

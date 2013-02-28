@@ -1,6 +1,9 @@
 package edu.buffalo.cse.cse486586.groupmessenger;
 
 import java.net.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.io.*;
@@ -27,7 +30,9 @@ public class GroupMessengerActivity extends Activity {
 	public static String ipAddr = "10.0.2.2";
 	public static final String TAG="adil activity";
 	public static int[] vector= new int[3];
-	Handler uiHandle= new Handler();
+	static Handler uiHandle= new Handler();
+	static int count=0;
+	public static List<String> Ordered = Collections.synchronizedList(new ArrayList<String>());
 	public static Map<Message, Integer> holdBack= new ConcurrentHashMap<Message,Integer>();
 	
     @Override
@@ -36,9 +41,11 @@ public class GroupMessengerActivity extends Activity {
         setContentView(R.layout.activity_group_messenger);
 
         TextView tv = (TextView) findViewById(R.id.textView1);
+        Order.mTextView =tv;
         tv.setMovementMethod(new ScrollingMovementMethod());
         findViewById(R.id.button1).setOnClickListener(
                 new OnPTestClickListener(tv, getContentResolver()));
+        new upTask().execute(0);
         
         
         //get avd name
@@ -55,10 +62,6 @@ public class GroupMessengerActivity extends Activity {
 					avd_name= "avd1";
 					avd_number=1;
 					isSequencer=true;
-					if(isSequencer) {
-			        	Thread t1= new Thread((Runnable)new Order());
-			        	t1.start();
-			        }
 				}
 				else if(portStr.equals("5558")) {
 					avd_name= "avd2";
@@ -94,8 +97,8 @@ public class GroupMessengerActivity extends Activity {
         				
         				try {
 							obj = (Message) in.readObject();
-							if(obj.msg_id.equalsIgnoreCase("seq"))
-								updateTextView(obj.msg);
+//							if(obj.msg_id.equals("seq"))
+//								updateTextView(obj.msg);
 							if(isSequencer && obj.msg_id.equalsIgnoreCase("msg"))
 								Order.addtoList(obj);
 							else if(obj.msg_id.equalsIgnoreCase("test")) {
@@ -131,8 +134,6 @@ public class GroupMessengerActivity extends Activity {
         		}
         	}
         }).start();
-
-        //start sequencer thread
     }
 
     public static void clientSockets() {
@@ -183,6 +184,7 @@ public class GroupMessengerActivity extends Activity {
     }    
     
     
+    
     public void updateTextView(String message) {
     	final String msg= message;
     	uiHandle.post(new Runnable() {
@@ -204,7 +206,7 @@ public class GroupMessengerActivity extends Activity {
     	new Thread(new Runnable() {
 			public void run() {
 				for (int i=0;i<=4; i++) {
-					String str= avd_name+":"+Integer.toString(i);
+					String str= avd_name+":"+Integer.toString(count++);
 					Message o= new Message("msg",str,avd_number,vector);
 					multicast(o);
 					try {
@@ -218,34 +220,23 @@ public class GroupMessengerActivity extends Activity {
     }
     
     
-//    private class upTask extends AsyncTask<Integer, String, Void> {
-//
-//		protected Void doInBackground(Integer... arg0) {
-//			while (true) {
-//				if (Order.ls < Order.Ordered.size()) {
-//					Order.ls++;
-//					publishProgress(Order.Ordered.get(Order.ls));
-//				}
-//				else {
-//					try {
-//						Thread.sleep(200);
-//					} catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}
-//				}
-//			}
-//		}
-//		
-//		protected void onProgressUpdate(String... s) {
-//			TextView textView = (TextView)findViewById(R.id.textView1);
-//			textView.setMovementMethod(new ScrollingMovementMethod());
-//	    	Log.v(TAG, "updating textview");
-//	    	//textView.append(msg+"\n");
-//	    	textView.append(s[0]);
-//	    	textView.append("\n");
-//	    	Log.v(TAG, "updated textview");
-//		}	
-//    }
+    private class upTask extends AsyncTask<Integer, String, Void> {
+
+		protected Void doInBackground(Integer... arg0) {
+			while (true) {
+				Order.alternate();
+			}
+		}
+		
+		protected void onProgressUpdate(String... s) {
+			TextView textView = (TextView)findViewById(R.id.textView1);
+			textView.setMovementMethod(new ScrollingMovementMethod());
+	    	Log.v(TAG, "updating textview");
+	    	textView.append(s[0]);
+	    	textView.append("\n");
+	    	Log.v(TAG, "updated textview");
+		}	
+    }
 }
 
 

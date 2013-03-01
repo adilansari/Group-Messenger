@@ -13,14 +13,13 @@ public class Order {
 	
 	
 	public static void updateMap(Message o) {
-		GroupMessengerActivity.toDeliver.put(o,o.seq_no);
+		GroupMessengerActivity.toDeliver.put(o.seq_no,o);
 	}
 	
 	public static void deliver() {
-		for (Message m: GroupMessengerActivity.toDeliver.keySet()) {
-			if (m.equals(null))
-				break;
-			if (m.seq_no == GroupMessengerActivity.d_num) {
+//		for (Message m: GroupMessengerActivity.toDeliver.keySet()) {
+			if (GroupMessengerActivity.toDeliver.containsKey(GroupMessengerActivity.d_num)) {
+				Message m= (Message) GroupMessengerActivity.toDeliver.get(GroupMessengerActivity.d_num);
 				final String str= m.msg;
 				GroupMessengerActivity.uiHandle.post(new Runnable() {
 					public void run() {
@@ -33,11 +32,11 @@ public class Order {
 				GroupMessengerActivity.d_num++;
 				GroupMessengerActivity.toDeliver.remove(m);
 			}
-		}
+//		}
 	}
 	
 	public static void addtoList(Message m) {
-		GroupMessengerActivity.holdBack.put(m, 1);
+		GroupMessengerActivity.holdBack.add(m);
 	}
 
 	public static void removeList(Message m) {
@@ -62,16 +61,16 @@ public class Order {
 	}
 	
 	public static void causal() {
-		for(Message o: GroupMessengerActivity.holdBack.keySet()) {
+		if(!GroupMessengerActivity.holdBack.isEmpty()) {
+			Message o= GroupMessengerActivity.holdBack.poll();
 			if(o.equals(null)) {
-				break;
+				return;
 			}
 			Log.w("adil", "sequecer at work");
 			//updateMap(o);
-			Message s= new Message("seq",o.msg, GroupMessengerActivity.avd_number,GroupMessengerActivity.vector,GroupMessengerActivity.seq_num);
+			Message s= new Message("seq",o.msg,GroupMessengerActivity.seq_num);
 			GroupMessengerActivity.seq_num++;
 			GroupMessengerActivity.multicast(s);
-			GroupMessengerActivity.holdBack.remove(o);
 			//updateMap(s);
 			// later for causal
 			if(vectorCheck(o.vector,o.avd_number)) {

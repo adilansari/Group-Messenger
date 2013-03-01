@@ -40,7 +40,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:text="@string/button_test2" />
+        android:text="@string/button_test2" 
+        android:onClick="test2"/>
 
     <Button
         android:id="@+id/button4"

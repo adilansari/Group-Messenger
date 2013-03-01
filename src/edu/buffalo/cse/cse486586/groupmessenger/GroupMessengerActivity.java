@@ -2,10 +2,12 @@ package edu.buffalo.cse.cse486586.groupmessenger;
 
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.io.*;
@@ -32,11 +34,12 @@ public class GroupMessengerActivity extends Activity {
 	public static String ipAddr = "10.0.2.2";
 	public static final String TAG="adil activity";
 	public static int[] vector= new int[3];
+	public static int[] soc= {11108,11112,11116};
 	static Handler uiHandle= new Handler();
 	static int mCount=0;
 	static int d_num=1, seq_num=1;
-	public static Map<Message,Integer> toDeliver = new ConcurrentHashMap<Message,Integer>();
-	public static Map<Message, Integer> holdBack= new ConcurrentHashMap<Message,Integer>();
+	public static Map<Integer, Message> toDeliver = new ConcurrentHashMap<Integer, Message>();
+	public static ConcurrentLinkedQueue<Message> holdBack= new ConcurrentLinkedQueue<Message>();
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +84,7 @@ public class GroupMessengerActivity extends Activity {
         	public void run() {
         		Socket sock1= null;
         		ObjectInputStream in =null;
-        		ExecutorService te= Executors.newFixedThreadPool(4);
+        		ExecutorService te= Executors.newSingleThreadExecutor();
         		ServerSocket servSocket= null;
         		try {
 					servSocket= new ServerSocket(recvPort);
@@ -99,18 +102,6 @@ public class GroupMessengerActivity extends Activity {
         				try {
 							obj = (Message) in.readObject();
 							te.execute(new ThreadExecute(obj));
-							//recvObj(obj);
-//							if(obj.msg_id.equals("seq"))
-//								Order.updateMap(obj);
-//							if(isSequencer && obj.msg_id.equalsIgnoreCase("msg"))
-//								Order.addtoList(obj);
-//							else if(obj.msg_id.equalsIgnoreCase("test")) {
-//								Order.addtoList(obj);
-//								//do some multicasting associated with test 2
-//							}
-//							else
-//								Order.updateMap(obj);
-//							Log.i(TAG, "recvd msg: "+obj.msg);
 						} catch (ClassNotFoundException e) {
 							Log.e(TAG, e.getMessage());
 						}
@@ -139,25 +130,6 @@ public class GroupMessengerActivity extends Activity {
         }).start();
     }
 
-    public void recvObj (Message m) {
-    	final Message obj=m;
-    	new Thread(new Runnable () {
-    		public void run() {
-//    			if(obj.msg_id.equals("seq"))
-//					updateMap(obj);
-				if(isSequencer && obj.msg_id.equalsIgnoreCase("msg"))
-					Order.addtoList(obj);
-				else if(obj.msg_id.equalsIgnoreCase("test")) {
-					Order.addtoList(obj);
-					//do some multicasting associated with test 2
-				}
-				else
-					Order.updateMap(obj);
-				Log.i(TAG, "recvd msg: "+obj.msg);
-    		}
-    	}).start();
-    }
-    
     public static void clientSockets() {
 			try {
      				socket[0]= new Socket(ipAddr, 11108);
@@ -165,10 +137,10 @@ public class GroupMessengerActivity extends Activity {
      				socket[2]= new Socket(ipAddr, 11116);
      				Log.v(TAG, "send socket[3] created ");
      			} catch (UnknownHostException e) {
-     				Log.e(TAG, ""+e.getMessage());
+     				Log.e(TAG, "socket "+e.getMessage());
      				e.printStackTrace();
      			} catch (IOException e) {
-     				Log.e(TAG, ""+e.getMessage());
+     				Log.e(TAG, "socket "+e.getMessage());
      				e.printStackTrace();
      			}
  			}
@@ -176,10 +148,10 @@ public class GroupMessengerActivity extends Activity {
 
     public static void multicast(Message o) {
     	Log.i(TAG, "multicasting "+o.msg);
-    	clientSockets();
-    	ExecutorService ex= Executors.newFixedThreadPool(4);
-    	for(Socket soc: socket) {
-    		ex.execute(new MulticastExecute(soc,o));
+    	//clientSockets();
+    	ExecutorService ex= Executors.newSingleThreadExecutor();
+    	for(int i: soc) {
+    		ex.execute(new MulticastExecute(i,o));
     	}
     }
     
@@ -235,6 +207,15 @@ public class GroupMessengerActivity extends Activity {
     	}).start();
     }
     
+    public void test2(View view) {
+    	new Thread(new Runnable() {
+			public void run() {
+				String str= avd_name+":"+Integer.toString(mCount++);
+				Message o= new Message("test",str,avd_number,vector,0);
+				multicast(o);
+			}
+    	}).start();
+    }
     
     private class upTask extends AsyncTask<Integer, String, Void> {
 
@@ -262,8 +243,14 @@ class Message implements Serializable {
 		this.msg_id= msg_id;
 		this.msg= msg;
 		this.avd_number= avd_number;
-		this.vector= v;
+		this.vector= Arrays.copyOf(v, v.length);
 		this.seq_no= s;
+	}
+	
+	Message(String msg_id, String msg, int s) {
+		this.msg_id= msg_id;
+		this.msg= msg;
+		this.seq_no=s;
 	}
 }
 
@@ -271,6 +258,7 @@ class ThreadExecute implements Runnable {
 
 	Socket sock= null;
 	Message obj;
+	ExecutorService e= Executors.newSingleThreadExecutor();
 	ThreadExecute(Message s) {
 		this.obj= s;
 	}
@@ -280,8 +268,8 @@ class ThreadExecute implements Runnable {
 		if(GroupMessengerActivity.isSequencer && obj.msg_id.equalsIgnoreCase("msg"))
 			Order.addtoList(obj);
 		else if(obj.msg_id.equalsIgnoreCase("test")) {
+			e.execute(new duoMulticast());
 			Order.addtoList(obj);
-		//do some multicasting associated with test 2
 		}
 		else
 			Order.updateMap(obj);
@@ -293,8 +281,17 @@ class MulticastExecute implements Runnable {
 	Socket sock=null;
 	Message o;
 	static final String TAG= "adil";
-	MulticastExecute(Socket s, Message m) {
-		this.sock=s;
+	MulticastExecute(int s, Message m) {
+		try {
+			this.sock= new Socket("10.0.2.2",s);
+		} catch (UnknownHostException e) {
+				Log.e(TAG, "socket "+e.getMessage());
+				e.printStackTrace();
+		} catch (IOException e) {
+				Log.e(TAG, "socket "+e.getMessage());
+				e.printStackTrace();
+		}
+		
 		this.o=m;
 	}
 	
@@ -302,9 +299,23 @@ class MulticastExecute implements Runnable {
 		try {
 			ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
 			out.writeObject(o);
+			out.flush();
 			out.close();
+			sock.close();
 		} catch (IOException e) {
-			Log.e(TAG, "Multicast fail"+e.getMessage());
+			Log.e(TAG, "Multicast fail "+e.getMessage());
 		}	
+	}
+}
+
+class duoMulticast implements Runnable {
+	
+	
+	public void run() {
+		for (int i=0;i<=1; i++) {
+			String str= GroupMessengerActivity.avd_name+":"+Integer.toString(GroupMessengerActivity.mCount++);
+			Message o= new Message("msg",str,GroupMessengerActivity.avd_number,GroupMessengerActivity.vector,0);
+			GroupMessengerActivity.multicast(o);
+		}
 	}
 }

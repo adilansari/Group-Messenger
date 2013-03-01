@@ -7,44 +7,32 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.widget.TextView;
 
-public class Order implements Runnable {
+public class Order {
+	
 	static TextView mTextView;
 	
-	static int seq_no = 1;
-	public static HashMap<String, Integer> deliver= new HashMap<String, Integer>();
 	
-	public static synchronized void updateMap(String msg) {
-		//map updater
-		//if msg already exists here than deirectly update content provider <msg,seq_no>
-			//seq_no++;
-		//else add msg to map
-		
-		if (deliver.containsKey(msg)) {
-			//add to content provider
-			//myHelper.insertPair(msg, Integer.toString(seq_no));
-			//new GroupMessengerActivity().updateTextView(msg);
-			//GroupMessengerActivity.Ordered.add(msg);
-			final String str=msg;
-			GroupMessengerActivity.uiHandle.post(new Runnable() {
-	    		public void run() {
-	    			TextView textView = mTextView;
-	    			textView.setMovementMethod(new ScrollingMovementMethod());
-	    	    	//Log.v(TAG, "updating textview");
-	    	    	//textView.append(msg+"\n");
-	    	    	textView.append(str);
-	    	    	textView.append("\n");
-	    	    	//Log.v(TAG, "updated textview");
-	    	    	/*ScrollView sc= (ScrollView)findViewById(R.id.scrollView1);
-	    	    	sc.fullScroll(View.FOCUS_DOWN);*/
-	    		}
-	    	});
-			
-			Log.d("adil", "FINAL" + msg);
-			seq_no++;
-			deliver.remove(msg);
-		}
-		else {
-			deliver.put(msg, 1);
+	public static void updateMap(Message o) {
+		GroupMessengerActivity.toDeliver.put(o,o.seq_no);
+	}
+	
+	public static void deliver() {
+		for (Message m: GroupMessengerActivity.toDeliver.keySet()) {
+			if (m.equals(null))
+				break;
+			if (m.seq_no == GroupMessengerActivity.d_num) {
+				final String str= m.msg;
+				GroupMessengerActivity.uiHandle.post(new Runnable() {
+					public void run() {
+						TextView textView = mTextView;
+						textView.setMovementMethod(new ScrollingMovementMethod());
+						textView.append(str);
+						textView.append("\n");
+					}
+	    		});
+				GroupMessengerActivity.d_num++;
+				GroupMessengerActivity.toDeliver.remove(m);
+			}
 		}
 	}
 	
@@ -73,49 +61,51 @@ public class Order implements Runnable {
 		return false;
 	}
 	
-	public static void alternate() {
+	public static void causal() {
 		for(Message o: GroupMessengerActivity.holdBack.keySet()) {
 			if(o.equals(null)) {
 				break;
 			}
 			Log.w("adil", "sequecer at work");
-			Order.updateMap(o.msg);
-			Message s= new Message("seq",o.msg, GroupMessengerActivity.avd_number,GroupMessengerActivity.vector);
+			//updateMap(o);
+			Message s= new Message("seq",o.msg, GroupMessengerActivity.avd_number,GroupMessengerActivity.vector,GroupMessengerActivity.seq_num);
+			GroupMessengerActivity.seq_num++;
 			GroupMessengerActivity.multicast(s);
 			GroupMessengerActivity.holdBack.remove(o);
+			//updateMap(s);
 			// later for causal
 			if(vectorCheck(o.vector,o.avd_number)) {
 				//accept, update current vector, update map, remove from holdBack
 			}
 		}
 	}
-	@Override
-	public void run() {
-		//also consider isSequencer flag while accepting
-		
-		while(true) {
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			for(Message o: GroupMessengerActivity.holdBack.keySet()) {
-				if(o.equals(null)) {
-					break;
-				}
-				Log.w("adil", "sequecer at work");
-				Order.updateMap(o.msg);
-				Message s= new Message("seq",o.msg, GroupMessengerActivity.avd_number,GroupMessengerActivity.vector);
-				GroupMessengerActivity.multicast(s);
-				GroupMessengerActivity.holdBack.remove(o);
-				// later for causal
-				if(vectorCheck(o.vector,o.avd_number)) {
-					//accept, update current vector, update map, remove from holdBack
-				}
-			}
-		}
-		
-	}
+	
+//	public void run() {
+//		//also consider isSequencer flag while accepting
+//		
+//		while(true) {
+//			try {
+//				Thread.sleep(500);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+//			for(Message o: GroupMessengerActivity.holdBack.keySet()) {
+//				if(o.equals(null)) {
+//					break;
+//				}
+//				Log.w("adil", "sequecer at work");
+//				Order.updateMap(o.msg);
+//				Message s= new Message("seq",o.msg, GroupMessengerActivity.avd_number,GroupMessengerActivity.vector);
+//				GroupMessengerActivity.multicast(s);
+//				GroupMessengerActivity.holdBack.remove(o);
+//				// later for causal
+//				if(vectorCheck(o.vector,o.avd_number)) {
+//					//accept, update current vector, update map, remove from holdBack
+//				}
+//			}
+//		}
+//		
+//	}
 	
 
 }

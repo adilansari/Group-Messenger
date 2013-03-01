@@ -4,8 +4,10 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -15,11 +17,11 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.telephony.TelephonyManager;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.view.Menu;
 import android.view.*;
 import android.view.View.OnKeyListener;
 import android.widget.EditText;
@@ -41,8 +43,8 @@ public class GroupMessengerActivity extends Activity {
 	static int d_num=1, seq_num=1;
 	public static Map<Integer, Message> toDeliver = new ConcurrentHashMap<Integer, Message>();
 	public static ConcurrentLinkedQueue<Message> holdBack= new ConcurrentLinkedQueue<Message>();
-	
-    @Override
+	static ContentResolver cv;
+	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_messenger);
@@ -52,6 +54,7 @@ public class GroupMessengerActivity extends Activity {
         tv.setMovementMethod(new ScrollingMovementMethod());
         findViewById(R.id.button1).setOnClickListener(
                 new OnPTestClickListener(tv, getContentResolver()));
+        cv= getContentResolver();
         new upTask().execute(0);
         
         
@@ -276,13 +279,14 @@ class ThreadExecute implements Runnable {
 	}
 	public void run() {
 		if(obj.msg_id.equals("seq"))
-			Order.updateMap(obj);
+			GroupMessengerActivity.toDeliver.put(obj.seq_no, obj);
 		else if(obj.msg_id.equals("msg"))
-			Order.addtoList(obj);
+			GroupMessengerActivity.holdBack.add(obj);
 		else if(obj.msg_id.equals("test")) {
-			Order.addtoList(obj);
+			GroupMessengerActivity.holdBack.add(obj);
 			e.execute(new duoMulticast());
 		}
+		Log.i("adil executor", "recvd msg: "+obj.msg);
 	}
 	
 	/* ALTERNATE LISTNER FOR TOTAL ORDERING ONLY

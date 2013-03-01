@@ -10,7 +10,8 @@ import android.widget.TextView;
 public class Order {
 	
 	static TextView mTextView;
-	
+	static int t=0;
+	static int a[]= new int[3];
 	
 	public static void updateMap(Message o) {
 		GroupMessengerActivity.toDeliver.put(o.seq_no,o);
@@ -20,7 +21,11 @@ public class Order {
 			if (GroupMessengerActivity.toDeliver.containsKey(GroupMessengerActivity.d_num)) {
 				Message m= (Message) GroupMessengerActivity.toDeliver.get(GroupMessengerActivity.d_num);
 				final String str= m.msg;
-				myHelper.insertPair(Integer.toString(GroupMessengerActivity.d_num), str);
+				new Thread(new Runnable() {
+					public void run() {
+						myHelper.insertPair(Integer.toString(GroupMessengerActivity.d_num), str, GroupMessengerActivity.cv);
+					}
+				}).start();
 				GroupMessengerActivity.uiHandle.post(new Runnable() {
 					public void run() {
 						TextView textView = mTextView;
@@ -88,10 +93,19 @@ public class Order {
 			Message o= GroupMessengerActivity.holdBack.poll();
 			if(o.equals(null))
 				return;
+			//if(t<3){a[t++]=o.avd_number;Cascast(o);}
 			Message s= new Message("seq",o.msg,GroupMessengerActivity.seq_num);
 			GroupMessengerActivity.seq_num++;
+			//else if(t<7){if(a[t++%3]==o.avd_number){Cascast(o);}}
 			GroupMessengerActivity.multicast(s);
+			//t=0;
 			//updateMap(s);
 		}
+	}
+	
+	public static void Cascast( Message o) {
+		Message s= new Message("seq",o.msg,GroupMessengerActivity.seq_num);
+		GroupMessengerActivity.seq_num++;
+		GroupMessengerActivity.multicast(s);
 	}
 }

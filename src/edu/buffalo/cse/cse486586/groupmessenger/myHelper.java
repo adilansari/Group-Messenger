@@ -1,5 +1,6 @@
 package edu.buffalo.cse.cse486586.groupmessenger;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -37,9 +38,10 @@ public class myHelper extends SQLiteOpenHelper {
 		 onCreate(arg0);
 	}
 
-	public static void insertPair(String key, String value) {
+	public static void insertPair(String key, String value, ContentResolver c) {
 		ContentValues keyValuesToInsert= new ContentValues();
 		keyValuesToInsert.put(myHelper.KEY_FIELD, key);
 		keyValuesToInsert.put(myHelper.VALUE_FIELD, value);
+		c.insert(myProvider.CONTENT_URI, keyValuesToInsert);
 	}
 }

@@ -60,13 +60,6 @@ public class myProvider extends ContentProvider {
 	@Override
 	public Cursor query(Uri arg0, String[] arg1, String arg2, String[] arg3,String arg4) {
 		db= myDb.getReadableDatabase();
-		/*SQLiteQueryBuilder qb= new SQLiteQueryBuilder();
-		qb.setTables(myHelper.TABLE_NAME);
-		
-		//qb.appendWhere(myHelper.KEY_FIELD + " = " + "'"+arg2+"'");
-		
-		//Cursor c= qb.query(db, null, myHelper.KEY_FIELD + " = ?", new String[] {arg2}, null, null, null);
-      	//Cursor c= this.db.query(myHelper.TABLE_NAME, null, "key = ? ", new String[] {"'"+arg2+"'"}, null, null, null);*/
         Cursor c= db.rawQuery("select * from "+myHelper.TABLE_NAME+" where key like '"+arg2+"'", null);
 		
 		return c;
@@ -74,7 +67,6 @@ public class myProvider extends ContentProvider {
 
 	@Override
 	public int update(Uri arg0, ContentValues arg1, String arg2, String[] arg3) {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 

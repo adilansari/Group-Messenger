@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.io.*;
-
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,7 +20,9 @@ import android.telephony.TelephonyManager;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
-import android.view.View;
+import android.view.*;
+import android.view.View.OnKeyListener;
+import android.widget.EditText;
 import android.widget.TextView;
 
 public class GroupMessengerActivity extends Activity {
@@ -36,7 +37,7 @@ public class GroupMessengerActivity extends Activity {
 	public static int[] vector= new int[3];
 	public static int[] soc= {11108,11112,11116};
 	static Handler uiHandle= new Handler();
-	static int mCount=0;
+	static int mCount=0, tmCount=0;
 	static int d_num=1, seq_num=1;
 	public static Map<Integer, Message> toDeliver = new ConcurrentHashMap<Integer, Message>();
 	public static ConcurrentLinkedQueue<Message> holdBack= new ConcurrentLinkedQueue<Message>();
@@ -148,7 +149,6 @@ public class GroupMessengerActivity extends Activity {
 
     public static void multicast(Message o) {
     	Log.i(TAG, "multicasting "+o.msg);
-    	//clientSockets();
     	ExecutorService ex= Executors.newSingleThreadExecutor();
     	for(int i: soc) {
     		ex.execute(new MulticastExecute(i,o));
@@ -195,7 +195,7 @@ public class GroupMessengerActivity extends Activity {
 			public void run() {
 				for (int i=0;i<=4; i++) {
 					String str= avd_name+":"+Integer.toString(mCount++);
-					Message o= new Message("msg",str,avd_number,vector,0);
+					Message o= new Message("msg",str,avd_number,Order.getVector(),0);
 					multicast(o);
 					try {
 						Thread.sleep(3000);
@@ -210,10 +210,22 @@ public class GroupMessengerActivity extends Activity {
     public void test2(View view) {
     	new Thread(new Runnable() {
 			public void run() {
-				String str= avd_name+":"+Integer.toString(mCount++);
-				Message o= new Message("test",str,avd_number,vector,0);
+				String str= avd_name+":"+Integer.toString(tmCount++);
+				Message o= new Message("test",str,avd_number,Order.getVector(),0);
 				multicast(o);
 			}
+    	}).start();
+    }
+    
+    public void sendMessage(View view) {
+    	EditText et= (EditText) findViewById(R.id.editText1);
+    	final String msg= et.getText().toString();
+    	et.setText("");
+    	new Thread(new Runnable() {
+    		public void run() {
+    			Message o= new Message("msg",msg,avd_number,Order.getVector(),0);
+				multicast(o);
+    		}
     	}).start();
     }
     
@@ -222,7 +234,7 @@ public class GroupMessengerActivity extends Activity {
 		protected Void doInBackground(Integer... arg0) {
 			while (true) {
 				if(isSequencer)
-					Order.causal();
+					Order.Casual();
 				Order.deliver();
 			}
 		}	
@@ -265,6 +277,18 @@ class ThreadExecute implements Runnable {
 	public void run() {
 		if(obj.msg_id.equals("seq"))
 			Order.updateMap(obj);
+		else if(obj.msg_id.equals("msg"))
+			Order.addtoList(obj);
+		else if(obj.msg_id.equals("test")) {
+			Order.addtoList(obj);
+			e.execute(new duoMulticast());
+		}
+	}
+	
+	/* ALTERNATE LISTNER FOR TOTAL ORDERING ONLY
+	public void run() {
+		if(obj.msg_id.equals("seq"))
+			Order.updateMap(obj);
 		if(GroupMessengerActivity.isSequencer && obj.msg_id.equalsIgnoreCase("msg"))
 			Order.addtoList(obj);
 		else if(obj.msg_id.equalsIgnoreCase("test")) {
@@ -273,8 +297,8 @@ class ThreadExecute implements Runnable {
 		}
 		else
 			Order.updateMap(obj);
-Log.i("adil executor", "recvd msg: "+obj.msg);
-	}	
+		Log.i("adil executor", "recvd msg: "+obj.msg);
+	}*/	
 }
 
 class MulticastExecute implements Runnable {
@@ -309,12 +333,10 @@ class MulticastExecute implements Runnable {
 }
 
 class duoMulticast implements Runnable {
-	
-	
 	public void run() {
 		for (int i=0;i<=1; i++) {
-			String str= GroupMessengerActivity.avd_name+":"+Integer.toString(GroupMessengerActivity.mCount++);
-			Message o= new Message("msg",str,GroupMessengerActivity.avd_number,GroupMessengerActivity.vector,0);
+			String str= GroupMessengerActivity.avd_name+":"+Integer.toString(GroupMessengerActivity.tmCount++);
+			Message o= new Message("msg",str,GroupMessengerActivity.avd_number,Order.getVector(),0);
 			GroupMessengerActivity.multicast(o);
 		}
 	}

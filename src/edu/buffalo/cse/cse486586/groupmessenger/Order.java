@@ -17,10 +17,10 @@ public class Order {
 	}
 	
 	public static void deliver() {
-//		for (Message m: GroupMessengerActivity.toDeliver.keySet()) {
 			if (GroupMessengerActivity.toDeliver.containsKey(GroupMessengerActivity.d_num)) {
 				Message m= (Message) GroupMessengerActivity.toDeliver.get(GroupMessengerActivity.d_num);
 				final String str= m.msg;
+				myHelper.insertPair(Integer.toString(GroupMessengerActivity.d_num), str);
 				GroupMessengerActivity.uiHandle.post(new Runnable() {
 					public void run() {
 						TextView textView = mTextView;
@@ -32,7 +32,6 @@ public class Order {
 				GroupMessengerActivity.d_num++;
 				GroupMessengerActivity.toDeliver.remove(m);
 			}
-//		}
 	}
 	
 	public static void addtoList(Message m) {
@@ -44,67 +43,55 @@ public class Order {
 	}
 	
 	
-	public static synchronized void updateVector(int a, int b, int c) {
-    	GroupMessengerActivity.vector[0]=a;
-    	GroupMessengerActivity.vector[1]=b;
-    	GroupMessengerActivity.vector[2]=c;
+	public static synchronized void setVector(int v[],int avd) { //avd is incoming avd_number
+    	GroupMessengerActivity.vector[avd]= GroupMessengerActivity.vector[avd]+1;
+    	GroupMessengerActivity.vector[(avd+1)%3]= Math.max(GroupMessengerActivity.vector[(avd+1)%3], v[(avd+1)%3]);
+    	GroupMessengerActivity.vector[(avd+2)%3]= Math.max(GroupMessengerActivity.vector[(avd+2)%3], v[(avd+2)%3]);
     }
+	
+	public static synchronized int[] getVector() {
+		int[] p = Arrays.copyOf(GroupMessengerActivity.vector, GroupMessengerActivity.vector.length);
+		++p[GroupMessengerActivity.avd_number];
+		return p;
+	}
 
 	public static boolean vectorCheck(int[] v, int a_num) {
-		//do a vector check on rcvd vector and avd number
+		//do a vector check on rcvd vector and recvd avd number
+		boolean b= false;
 		if(v[a_num] == GroupMessengerActivity.vector[a_num]+1)
 			if(v[(a_num+1)%3] <= GroupMessengerActivity.vector[(a_num+1)%3])
 				if(v[(a_num+2)%3] <= GroupMessengerActivity.vector[(a_num+2)%3])
-					return true;
+					b= true;
 		
-		return false;
+		return b;
 	}
-	
+
 	public static void causal() {
+		Iterator<Message> itr = GroupMessengerActivity.holdBack.iterator();
+		while(itr.hasNext()) {
+			Message m= (Message) itr.next();
+			if(vectorCheck(m.vector,m.avd_number)) {
+				setVector(m.vector,m.avd_number);
+				if (GroupMessengerActivity.isSequencer) {
+					Message s= new Message("seq",m.msg,GroupMessengerActivity.seq_num);
+					GroupMessengerActivity.seq_num++;
+					GroupMessengerActivity.multicast(s);
+				}
+				removeList(m);
+			}
+		}
+	}
+
+	
+	public static void Casual() {
 		if(!GroupMessengerActivity.holdBack.isEmpty()) {
 			Message o= GroupMessengerActivity.holdBack.poll();
-			if(o.equals(null)) {
+			if(o.equals(null))
 				return;
-			}
-			Log.w("adil", "sequecer at work");
-			//updateMap(o);
 			Message s= new Message("seq",o.msg,GroupMessengerActivity.seq_num);
 			GroupMessengerActivity.seq_num++;
 			GroupMessengerActivity.multicast(s);
 			//updateMap(s);
-			// later for causal
-			if(vectorCheck(o.vector,o.avd_number)) {
-				//accept, update current vector, update map, remove from holdBack
-			}
 		}
 	}
-	
-//	public void run() {
-//		//also consider isSequencer flag while accepting
-//		
-//		while(true) {
-//			try {
-//				Thread.sleep(500);
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//			for(Message o: GroupMessengerActivity.holdBack.keySet()) {
-//				if(o.equals(null)) {
-//					break;
-//				}
-//				Log.w("adil", "sequecer at work");
-//				Order.updateMap(o.msg);
-//				Message s= new Message("seq",o.msg, GroupMessengerActivity.avd_number,GroupMessengerActivity.vector);
-//				GroupMessengerActivity.multicast(s);
-//				GroupMessengerActivity.holdBack.remove(o);
-//				// later for causal
-//				if(vectorCheck(o.vector,o.avd_number)) {
-//					//accept, update current vector, update map, remove from holdBack
-//				}
-//			}
-//		}
-//		
-//	}
-	
-
 }

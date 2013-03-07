@@ -1,10 +1,7 @@
 package edu.buffalo.cse.cse486586.groupmessenger;
 
 import java.util.*;
-
-import android.view.View;
 import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.widget.TextView;
 
 public class Order {
@@ -39,14 +36,6 @@ public class Order {
 			}
 	}
 	
-	public static void addtoList(Message m) {
-		GroupMessengerActivity.holdBack.add(m);
-	}
-
-	public static void removeList(Message m) {
-		GroupMessengerActivity.holdBack.remove(m);
-	}
-	
 	
 	public static synchronized void setVector(int v[],int avd) { //avd is incoming avd_number
     	GroupMessengerActivity.vector[avd]= GroupMessengerActivity.vector[avd]+1;
@@ -60,8 +49,7 @@ public class Order {
 		return p;
 	}
 
-	public static boolean vectorCheck(int[] v, int a_num) {
-		//do a vector check on rcvd vector and recvd avd number
+	public static boolean vectorCheck(int[] v, int a_num) {//do a vector check on rcvd vector and recvd avd number
 		boolean b= false;
 		if(v[a_num] == GroupMessengerActivity.vector[a_num]+1)
 			if(v[(a_num+1)%3] <= GroupMessengerActivity.vector[(a_num+1)%3])
@@ -82,7 +70,7 @@ public class Order {
 					GroupMessengerActivity.seq_num++;
 					GroupMessengerActivity.multicast(s);
 				}
-				removeList(m);
+				GroupMessengerActivity.holdBack.remove();
 			}
 		}
 	}
@@ -93,13 +81,9 @@ public class Order {
 			Message o= GroupMessengerActivity.holdBack.poll();
 			if(o.equals(null))
 				return;
-			//if(t<3){a[t++]=o.avd_number;Cascast(o);}
 			Message s= new Message("seq",o.msg,GroupMessengerActivity.seq_num);
 			GroupMessengerActivity.seq_num++;
-			//else if(t<7){if(a[t++%3]==o.avd_number){Cascast(o);}}
 			GroupMessengerActivity.multicast(s);
-			//t=0;
-			//updateMap(s);
 		}
 	}
 	

@@ -1,13 +1,8 @@
 package edu.buffalo.cse.cse486586.groupmessenger;
 
 import java.net.*;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -23,7 +18,6 @@ import android.telephony.TelephonyManager;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.*;
-import android.view.View.OnKeyListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -32,7 +26,6 @@ public class GroupMessengerActivity extends Activity {
 	public static String avd_name;
 	public static int avd_number;
 	public static boolean isSequencer=false;
-	public static Socket socket[]= new Socket[3];
 	public static int recvPort = 10000;
 	public static String ipAddr = "10.0.2.2";
 	public static final String TAG="adil activity";
@@ -134,20 +127,6 @@ public class GroupMessengerActivity extends Activity {
         }).start();
     }
 
-    public static void clientSockets() {
-			try {
-     				socket[0]= new Socket(ipAddr, 11108);
-     				socket[1]= new Socket(ipAddr, 11112);
-     				socket[2]= new Socket(ipAddr, 11116);
-     				Log.v(TAG, "send socket[3] created ");
-     			} catch (UnknownHostException e) {
-     				Log.e(TAG, "socket "+e.getMessage());
-     				e.printStackTrace();
-     			} catch (IOException e) {
-     				Log.e(TAG, "socket "+e.getMessage());
-     				e.printStackTrace();
-     			}
- 			}
 
 
     public static void multicast(Message o) {
@@ -174,24 +153,6 @@ public class GroupMessengerActivity extends Activity {
         return true;
     }    
     
-    
-    
-    public void updateTextView(String message) {
-    	final String msg= message;
-    	uiHandle.post(new Runnable() {
-    		public void run() {
-    			TextView textView = (TextView)findViewById(R.id.textView1);
-    			textView.setMovementMethod(new ScrollingMovementMethod());
-    	    	Log.v(TAG, "updating textview");
-    	    	//textView.append(msg+"\n");
-    	    	textView.append(msg);
-    	    	textView.append("\n");
-    	    	Log.v(TAG, "updated textview");
-    	    	/*ScrollView sc= (ScrollView)findViewById(R.id.scrollView1);
-    	    	sc.fullScroll(View.FOCUS_DOWN);*/
-    		}
-    	});
-    }
     
     public void test1(View view) {
     	new Thread(new Runnable() {
@@ -288,21 +249,6 @@ class ThreadExecute implements Runnable {
 		}
 		Log.i("adil executor", "recvd msg: "+obj.msg);
 	}
-	
-	/* ALTERNATE LISTNER FOR TOTAL ORDERING ONLY
-	public void run() {
-		if(obj.msg_id.equals("seq"))
-			Order.updateMap(obj);
-		if(GroupMessengerActivity.isSequencer && obj.msg_id.equalsIgnoreCase("msg"))
-			Order.addtoList(obj);
-		else if(obj.msg_id.equalsIgnoreCase("test")) {
-			e.execute(new duoMulticast());
-			Order.addtoList(obj);
-		}
-		else
-			Order.updateMap(obj);
-		Log.i("adil executor", "recvd msg: "+obj.msg);
-	}*/	
 }
 
 class MulticastExecute implements Runnable {

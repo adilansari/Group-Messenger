@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Group-messenger : Totally and Causally ordered Group Messenger on Android" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Group-messenger</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/adilansari/Group-Messenger">View on GitHub</a>
+
+          <h1 id="project_title">Group-messenger</h1>
+          <h2 id="project_tagline">Totally and Causally ordered Group Messenger on Android</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/adilansari/Group-Messenger/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/adilansari/Group-Messenger/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>Totally and Causally ordered Group Messenger on Android</h1>
+
+<h1></h1>
+
+<hr><ul>
+<li>The app multicasts every user-entered message to all app instances (including the one that is sending the message). In the rest of the description, “multicast” always means sending a message to all app instances.</li>
+<li>App uses <strong>B-multicast</strong>. It does not implement R-multicast.</li>
+<li>You need to come up with an algorithm that provides total-causal ordering.</li>
+<li><p>A content provider is implemented using SQLite on Android to store  pair.</p></li>
+<li>
+<p>We have fixed the ports &amp; sockets.</p>
+
+<ul>
+<li>App opens one server socket that listens on 10000.</li>
+<li>We will use up to 3 AVDs. The redirection ports are 11108, 11112, and 11116. All three ports are hard coded.</li>
+</ul>
+</li>
+<li><p>Every message is stored in the provider individually by all app instances. Each message is stored as a  pair. The key should be the final delivery sequence number for the message (as a string); the value should be the actual message (again, as a string). The delivery sequence number should start from 0 and increase by 1 for each message.</p></li>
+</ul><h2>Test case 1</h2>
+
+<ul>
+<li>Main Activity has “Test1” button that triggers the test case.</li>
+<li>When the button is clicked, it should create a thread that multicasts 5 messages in sequence. Multicasting of one message should be followed by 3 seconds sleep of the thread. This is just to make sure that messages can be spread from different emulator instances.</li>
+<li>The message format should be “:”.  is the emulator instance’s name, e.g., avd0, avd1, and avd2.  is a number starting from 0 and increasing by 1 for each message. For example, if your first emulator instance multicasts 5 messages, then the messages should be “avd0:0”, “avd0:1”, “avd0:2”, “avd0:3”, and “avd0:4”.</li>
+<li>With this test case, at least the following two ordering guarantees can be verified by just looking at the sequence of messages on each instance.
+
+<ul>
+<li>Total ordering: every emulator instance should display the same order of message</li>
+<li>FIFO ordering: all messages from the same instance should preserve the local order. This should be preserved because causal ordering implies FIFO ordering.</li>
+</ul>
+</li>
+</ul><h2>Test case 2</h2>
+
+<ul>
+<li>Main Activity has “Test2” button that triggers the test case.</li>
+<li>When the button is clicked, app multicasts one message. The message format is the same as the above test case.</li>
+<li>Receiving of this first message triggers all app instances to multicast exactly two more messages. Unlike the test case 1, you should not introduce any extra delay between the messages.
+
+<ul>
+<li>Thus, in total with 3 AVDs, there should be 1 + 3 + 3 = 7 multicast messages.</li>
+</ul>
+</li>
+</ul><h2>References</h2>
+
+<p>[1] Read about Multicast <a href="http://www.cs.odu.edu/%7Ecs778/jeffay/Lecture7.pdf">here</a></p>
+
+<p>[2] Single best resource on Android, <a href="http://developer.android.com">Android dev</a></p>
+
+<p>[3] Message ordering, <a href="http://www.cs.uic.edu/%7Eajayk/Chapter6.pdf">here</a></p>
+
+<h2>Screenshots</h2>
+
+<h4>Test Case 1:</h4>
+
+<p><img src="https://raw.github.com/adilansari/Group-Messenger/master/screen/test-1.png" alt="Test Case-1"></p>
+
+<h4>Test Case 2:</h4>
+
+<p><img src="https://raw.github.com/adilansari/Group-Messenger/master/screen/test-2.png" alt="Test Case-2"></p>
+
+<hr><h2>Contact</h2>
+
+<ul>
+<li><a href="mailto:%20me@adilansari.com">E-mail</a></li>
+<li><a href="http://twitter.com/adilansari">@adilansari</a></li>
+<li><a href="http://www.adilansari.com">HomePage</a></li>
+</ul>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Group-messenger maintained by <a href="https://github.com/adilansari">adilansari</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
